@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Camera Test</title>
+</head>
+<body>
+  <video id="video" autoplay playsinline width="300" height="200"></video>
+
+  <script>
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        document.getElementById('video').srcObject = stream;
+        console.log("Camera started");
+      })
+      .catch(err => {
+        console.error("Camera permission denied or no camera found", err);
+      });
+  </script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DineMarker Registration</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-gray-900 via-purple-900 to-violet-600 min-h-screen flex items-center justify-center">
+  <div class="bg-white bg-opacity-10 backdrop-blur-md rounded-2xl shadow-2xl p-8 w-full max-w-lg">
+    <div class="text-center mb-6">
+      <h1 class="text-4xl font-extrabold text-white">DineMarker</h1>
+      <p class="text-violet-200 text-sm mt-1">Register your canteen and get started</p>
+    </div>
+
+    <form class="grid grid-cols-1 md:grid-cols-2 gap-4 text-white" id="registerForm">
+      <div>
+        <label class="text-sm" for="name">First Name</label>
+        <input type="text" id="name" name="name" placeholder="John" required
+          class="w-full mt-1 px-4 py-2 rounded-xl bg-white bg-opacity-20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-400" />
+      </div>
+      <div>
+        <label class="text-sm" for="surname">Last Name</label>
+        <input type="text" id="surname" name="surname" placeholder="Doe" required
+          class="w-full mt-1 px-4 py-2 rounded-xl bg-white bg-opacity-20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-400" />
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="text-sm" for="email">Email Address</label>
+        <input type="email" id="email" name="email" placeholder="manager@canteen.com" required
+          class="w-full mt-1 px-4 py-2 rounded-xl bg-white bg-opacity-20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-400" />
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="text-sm" for="phone">Phone Number</label>
+        <input type="tel" id="phone" name="phone" placeholder="+1234567890"
+          class="w-full mt-1 px-4 py-2 rounded-xl bg-white bg-opacity-20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-400" />
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="text-sm" for="canteen_name">Canteen Name</label>
+        <input type="text" id="canteen_name" name="canteen_name" placeholder="Central Campus Canteen"
+          class="w-full mt-1 px-4 py-2 rounded-xl bg-white bg-opacity-20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-400" />
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="text-sm" for="canteen_location">Canteen Location</label>
+        <input type="text" id="canteen_location" name="canteen_location" placeholder="Building A, XYZ University"
+          class="w-full mt-1 px-4 py-2 rounded-xl bg-white bg-opacity-20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-400" />
+      </div>
+
+      <div>
+        <label class="text-sm" for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="••••••••" required
+          class="w-full mt-1 px-4 py-2 rounded-xl bg-white bg-opacity-20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-400" />
+      </div>
+
+      <div>
+        <label class="text-sm" for="confirm_password">Confirm Password</label>
+        <input type="password" id="confirm_password" name="confirm_password" placeholder="••••••••" required
+          class="w-full mt-1 px-4 py-2 rounded-xl bg-white bg-opacity-20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-400" />
+      </div>
+
+      <div class="md:col-span-2">
+        <button type="submit"
+          class="w-full mt-4 bg-violet-600 hover:bg-violet-700 text-white py-2 rounded-xl font-semibold transition-all duration-200 shadow-md">
+          Register
+        </button>
+      </div>
+    </form>
+
+    <p class="mt-6 text-sm text-center text-white">
+      Already have an account?
+      <a href="/login" class="text-violet-300 hover:underline">Login here</a>
+    </p>
+  </div>
+
+  <script>
+    const form = document.getElementById('registerForm');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const data = {
+        name: form.name.value,
+        surname: form.surname.value,
+        email: form.email.value,
+        phone: form.phone.value,
+        canteen_name: form.canteen_name.value,
+        canteen_location: form.canteen_location.value,
+        password: form.password.value
+      };
+
+      if (form.password.value !== form.confirm_password.value) {
+        alert('Passwords do not match!');
+        return;
+      }
+
+      try {
+        const res = await fetch('/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+
+        if (result.success) {
+          alert('Registration successful! Please log in.');
+          window.location.href = '/login';
+        } else {
+          alert(result.message || 'Registration failed');
+        }
+      } catch (err) {
+        alert('Error occurred. Please try again.');
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>

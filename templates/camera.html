@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DineMarker - Camera Scan</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex flex-col">
+
+  <!-- Navigation -->
+  <nav class="flex justify-end space-x-8 p-6 bg-gray-800 bg-opacity-70">
+    <a href="/" class="hover:underline">Home</a>
+    <a href="/camera" class="hover:underline font-bold">Camera</a>
+    <a href="/analytics" class="hover:underline">Analytics</a>
+  </nav>
+
+  <!-- Scanner Container -->
+  <main class="flex flex-col items-center justify-center flex-grow p-4">
+    <h1 class="text-3xl mb-4">Scan QR or Barcode</h1>
+
+    <div id="reader" style="width: 350px;"></div>
+
+    <div id="result" class="mt-6 p-4 bg-green-700 rounded-lg hidden"></div>
+  </main>
+
+  <script>
+    function onScanSuccess(decodedText, decodedResult) {
+      // handle the scanned code as you like, e.g., send to backend
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerText = `Scanned Code: ${decodedText}`;
+      resultDiv.classList.remove('hidden');
+
+      // Optionally stop scanning after first successful scan:
+      html5QrcodeScanner.clear();
+      
+      // You can also send the decodedText to your Flask backend here via fetch() if needed
+      console.log(`Scan result: ${decodedText}`);
+    }
+
+    function onScanFailure(error) {
+      // ignore scan failures or log them
+      // console.warn(`Code scan error = ${error}`);
+    }
+
+    let html5QrcodeScanner = new Html5QrcodeScanner(
+      "reader", { fps: 10, qrbox: 250 }, /* verbose= */ false);
+
+    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+  </script>
+
+</body>
+</html>
