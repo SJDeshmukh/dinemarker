@@ -1,24 +1,26 @@
 import sqlite3
 
-# Connect to SQLite database (creates file if it doesn't exist)
 conn = sqlite3.connect('users.db')
-
-# Create a cursor object
 cursor = conn.cursor()
 
-# Create table
-cursor.execute('''
-CREATE TABLE users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT,
-    surname TEXT,
-    email TEXT UNIQUE,
-    password TEXT
-);
-''')
+# Drop table if needed to recreate (uncomment if necessary)
+cursor.execute('DROP TABLE IF EXISTS users')
 
-# Commit and close
+# Updated users table schema
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        surname TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        phone TEXT,
+        canteen_name TEXT,
+        canteen_location TEXT,
+        password TEXT NOT NULL
+    )
+""")
+
 conn.commit()
 conn.close()
 
-print("Database and 'users' table created successfully.")
+print("Updated users table with new fields.")

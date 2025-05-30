@@ -51,6 +51,9 @@ def register():
     surname = data.get('surname')
     email = data.get('email')
     password = data.get('password')
+    phone = data.get('phone')
+    canteen_name = data.get('canteen_name')
+    canteen_location = data.get('canteen_location')
 
     if not all([name, surname, email, password]):
         return jsonify({'success': False, 'message': 'Missing required fields'}), 400
@@ -63,13 +66,36 @@ def register():
         return jsonify({'success': False, 'message': 'Email already exists'}), 400
 
     conn.execute(
-        'INSERT INTO users (name, surname, email, password) VALUES (?, ?, ?, ?)',
-        (name, surname, email, password)
+        '''INSERT INTO users 
+        (name, surname, email, phone, canteen_name, canteen_location, password)
+        VALUES (?, ?, ?, ?, ?, ?, ?)''',
+        (name, surname, email, phone, canteen_name, canteen_location, password)
     )
     conn.commit()
     conn.close()
-    print("Data inserted in database")
+
     return jsonify({'success': True})
+@app.route('/log-scan', methods=['POST'])
+def log_scan():
+    data = request.get_json()
+    qr_data = data.get('employees.db')
+
+    if not qr_data:
+        return jsonify({'success': False, 'message': 'No QR data provided'}), 400
+
+    try:
+        conn = get_db_connection()
+        conn.execute(
+            'INSERT INTO scans (qr_data, timestamp) VALUES (?, CURRENT_TIMESTAMP)',
+            (qr_data,)
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        print("Scan logging error:", e)
+        return jsonify({'success': False, 'message': 'Internal server error'}), 500
+
 @app.route('/camera')
 def camera():
     return render_template('camera.html')

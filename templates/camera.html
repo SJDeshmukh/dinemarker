@@ -2,53 +2,67 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DineMarker - Camera Scan</title>
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QR Scanner | DineMarker</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
-<body class="bg-gray-900 text-white min-h-screen flex flex-col">
+<body class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen p-4">
+  <h1 class="text-3xl font-bold mb-4">Scan Employee QR</h1>
 
-  <!-- Navigation -->
-  <nav class="flex justify-end space-x-8 p-6 bg-gray-800 bg-opacity-70">
-    <a href="/" class="hover:underline">Home</a>
-    <a href="/camera" class="hover:underline font-bold">Camera</a>
-    <a href="/analytics" class="hover:underline">Analytics</a>
-  </nav>
+  <div id="reader" class="w-full max-w-sm border-4 border-violet-500 rounded-xl"></div>
 
-  <!-- Scanner Container -->
-  <main class="flex flex-col items-center justify-center flex-grow p-4">
-    <h1 class="text-3xl mb-4">Scan QR or Barcode</h1>
-
-    <div id="reader" style="width: 350px;"></div>
-
-    <div id="result" class="mt-6 p-4 bg-green-700 rounded-lg hidden"></div>
-  </main>
+  <div id="success" class="hidden mt-6 text-center">
+    <div class="text-green-500 text-7xl">✅</div>
+    <p class="mt-2 text-green-300 font-bold text-lg">Scan successful!</p>
+  </div>
 
   <script>
-    function onScanSuccess(decodedText, decodedResult) {
-      // handle the scanned code as you like, e.g., send to backend
-      const resultDiv = document.getElementById('result');
-      resultDiv.innerText = `Scanned Code: ${decodedText}`;
-      resultDiv.classList.remove('hidden');
+    const successDiv = document.getElementById('success');
 
-      // Optionally stop scanning after first successful scan:
-      html5QrcodeScanner.clear();
-      
-      // You can also send the decodedText to your Flask backend here via fetch() if needed
-      console.log(`Scan result: ${decodedText}`);
+    function showSuccess() {
+      successDiv.classList.remove('hidden');
+      setTimeout(() => {
+        successDiv.classList.add('hidden');
+        html5QrcodeScanner.resume();
+      }, 2000);
     }
 
-    function onScanFailure(error) {
-      // ignore scan failures or log them
-      // console.warn(`Code scan error = ${error}`);
+    function handleScanSuccess(decodedText, decodedResult) {
+      // Pause scanner to prevent duplicate scans
+      html5QrcodeScanner.pause();
+
+      // Send data to backend
+      fetch('/log-scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ qr_data: decodedText })
+      })
+      .then(res => res.json())
+      .then(response => {
+        if (response.success) {
+          showSuccess();
+        } else {
+          alert('Logging failed');
+          html5QrcodeScanner.resume();
+        }
+      })
+      .catch(error => {
+        alert('Scan error');
+        console.error(error);
+        html5QrcodeScanner.resume();
+      });
     }
 
-    let html5QrcodeScanner = new Html5QrcodeScanner(
-      "reader", { fps: 10, qrbox: 250 }, /* verbose= */ false);
-
-    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+    const html5QrcodeScanner = new Html5Qrcode("reader");
+    html5QrcodeScanner.start(
+      { facingMode: "environment" },
+      {
+        fps: 10,
+        qrbox: 250
+      },
+      handleScanSuccess
+    );
   </script>
-
 </body>
 </html>
