@@ -91,13 +91,20 @@ def log_scan():
             'INSERT INTO scans (employee_id, timestamp) VALUES (?, CURRENT_TIMESTAMP)',
             (qr_data,)
         )
-
+        
+        scans = conn.execute('SELECT * FROM scans').fetchall()
+        print("\nCurrent contents of scans table:")
+        for row in scans:
+            print(dict(row))
         conn.commit()
         conn.close()
         return jsonify({'success': True})
     except Exception as e:
         print("Scan logging error:", e)
         return jsonify({'success': False, 'message': 'Internal server error'}), 500
+
+
+
 @app.route('/get-employee', methods=['POST'])
 def get_employee():
     data = request.get_json()
