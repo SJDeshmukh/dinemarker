@@ -19,9 +19,17 @@
         <input type="text" id="name" name="name" placeholder="John" required
           class="w-full mt-1 px-4 py-2 rounded-xl bg-white bg-opacity-20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-400" />
       </div>
+
       <div>
         <label class="text-sm" for="surname">Last Name</label>
         <input type="text" id="surname" name="surname" placeholder="Doe" required
+          class="w-full mt-1 px-4 py-2 rounded-xl bg-white bg-opacity-20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-400" />
+      </div>
+
+      <!-- ✅ Employee ID Field Added -->
+      <div class="md:col-span-2">
+        <label class="text-sm" for="employee_id">Employee ID</label>
+        <input type="text" id="employee_id" name="employee_id" placeholder="EMP12345" required
           class="w-full mt-1 px-4 py-2 rounded-xl bg-white bg-opacity-20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-400" />
       </div>
 
@@ -88,7 +96,8 @@
         phone: form.phone.value,
         canteen_name: form.canteen_name.value,
         canteen_location: form.canteen_location.value,
-        password: form.password.value
+        password: form.password.value,
+        employee_id: form.employee_id.value // ✅ Include Employee ID
       };
 
       if (form.password.value !== form.confirm_password.value) {
