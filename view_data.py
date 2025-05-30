@@ -1,7 +1,7 @@
 import sqlite3
 
 # Path to your SQLite database file
-DB_PATH = 'users.db'
+DB_PATH = 'employees.db'
 
 def view_users():
     conn = sqlite3.connect(DB_PATH)

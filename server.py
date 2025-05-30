@@ -88,9 +88,10 @@ def log_scan():
     try:
         conn = get_db_connection()
         conn.execute(
-            'INSERT INTO scans (qr_data, timestamp) VALUES (?, CURRENT_TIMESTAMP)',
+            'INSERT INTO scans (employee_id, timestamp) VALUES (?, CURRENT_TIMESTAMP)',
             (qr_data,)
         )
+
         conn.commit()
         conn.close()
         return jsonify({'success': True})
