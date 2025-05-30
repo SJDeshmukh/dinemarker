@@ -53,28 +53,28 @@ def register():
     phone = data.get('phone')
     canteen_name = data.get('canteen_name')
     canteen_location = data.get('canteen_location')
+    employee_id = data.get('employee_id')  # ✅ New field
 
-    if not all([name, surname, email, password]):
+    if not all([name, surname, email, password, employee_id]):
         return jsonify({'success': False, 'message': 'Missing required fields'}), 400
 
     conn = get_db_connection()
-    existing_user = conn.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
+    existing_user = conn.execute('SELECT * FROM users WHERE email = ? OR employee_id = ?', (email, employee_id)).fetchone()
 
     if existing_user:
         conn.close()
-        return jsonify({'success': False, 'message': 'Email already exists'}), 400
+        return jsonify({'success': False, 'message': 'Email or Employee ID already exists'}), 400
 
     conn.execute(
         '''INSERT INTO users 
-        (name, surname, email, phone, canteen_name, canteen_location, password)
-        VALUES (?, ?, ?, ?, ?, ?, ?)''',
-        (name, surname, email, phone, canteen_name, canteen_location, password)
+        (name, surname, email, phone, canteen_name, canteen_location, password, employee_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+        (name, surname, email, phone, canteen_name, canteen_location, password, employee_id)
     )
     conn.commit()
     conn.close()
 
     return jsonify({'success': True})
-
 
 @app.route('/log-scan', methods=['POST'])
 def log_scan():
@@ -84,7 +84,7 @@ def log_scan():
     if not qr_data:
         return jsonify({'success': False, 'message': 'No QR data provided'}), 400
 
-    # Extract Employee ID from scanned text
+    # Extract Employee ID
     lines = qr_data.split('\n')
     employee_id = None
     for line in lines:
@@ -102,18 +102,11 @@ def log_scan():
             (employee_id, qr_data)
         )
         conn.commit()
-
-        scans = conn.execute('SELECT * FROM scans').fetchall()
-        print("\nCurrent contents of scans table:")
-        for row in scans:
-            print(dict(row))
-
         conn.close()
         return jsonify({'success': True})
     except Exception as e:
         print("Scan logging error:", e)
         return jsonify({'success': False, 'message': 'Internal server error'}), 500
-
 
 @app.route('/get-employee', methods=['POST'])
 def get_employee():
@@ -125,7 +118,7 @@ def get_employee():
 
     conn = get_db_connection()
     user = conn.execute(
-        'SELECT * FROM users WHERE email = ? OR id = ?', (emp_id, emp_id)
+        'SELECT * FROM users WHERE employee_id = ?', (emp_id,)
     ).fetchone()
     conn.close()
 
@@ -144,7 +137,6 @@ def get_employee():
     else:
         return jsonify({'success': False, 'message': 'Employee not found'}), 404
 
-
 @app.route('/statistics', methods=['GET', 'POST'])
 def statistics():
     if request.method == 'POST':
@@ -155,7 +147,7 @@ def statistics():
             return jsonify({'success': False, 'message': 'No employee ID provided'}), 400
 
         conn = get_db_connection()
-        user = conn.execute('SELECT * FROM users WHERE email = ? OR id = ?', (employee_id, employee_id)).fetchone()
+        user = conn.execute('SELECT * FROM users WHERE employee_id = ?', (employee_id,)).fetchone()
 
         if not user:
             conn.close()
@@ -175,11 +167,9 @@ def statistics():
 
     return render_template('statistics.html')
 
-
 @app.route('/camera')
 def camera():
     return render_template('camera.html')
 
-# Launch app
 if __name__ == '__main__':
     app.run(debug=True)
