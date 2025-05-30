@@ -88,9 +88,10 @@ def log_scan():
     try:
         conn = get_db_connection()
         conn.execute(
-            'INSERT INTO scans (qr_data, timestamp) VALUES (?, CURRENT_TIMESTAMP)',
+            'INSERT INTO scans (employee_id, timestamp) VALUES (?, CURRENT_TIMESTAMP)',
             (qr_data,)
         )
+
         conn.commit()
         conn.close()
         return jsonify({'success': True})
@@ -128,8 +129,31 @@ def get_employee():
 def camera():
     return render_template('camera.html')
 
-@app.route('/statistics')
+@app.route('/statistics', methods=['GET', 'POST'])
 def statistics():
+    if request.method == 'POST':
+        data = request.get_json()
+        employee_id = data.get('employee_id')
+
+        if not employee_id:
+            return jsonify({'success': False, 'message': 'No employee ID provided'}), 400
+
+        conn = get_db_connection()
+
+        user = conn.execute('SELECT * FROM users WHERE email = ? OR id = ?', (employee_id, employee_id)).fetchone()
+        if not user:
+            conn.close()
+            return jsonify({'success': False, 'message': 'Employee not found'}), 404
+
+        scans = conn.execute('SELECT timestamp FROM scans WHERE employee_id = ? ORDER BY timestamp DESC', (employee_id,)).fetchall()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'employee': dict(user),
+            'scans': [row['timestamp'] for row in scans]
+        })
+    
     return render_template('statistics.html')
 
 

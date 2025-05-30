@@ -27,13 +27,23 @@ import sqlite3
 import sqlite3
 
 conn = sqlite3.connect('users.db')
-conn.execute('''
-    CREATE TABLE IF NOT EXISTS scans (
+c = conn.cursor()
+
+# Drop the old table
+c.execute('DROP TABLE IF EXISTS scans')
+
+# Create correct table with employee_id
+c.execute('''
+    CREATE TABLE scans (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        qr_data TEXT NOT NULL,
+        employee_id TEXT NOT NULL,
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
+    )
 ''')
+
 conn.commit()
 conn.close()
+
+print("✅ 'scans' table recreated successfully.")
+
 
