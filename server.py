@@ -5,7 +5,6 @@ from flask_cors import CORS
 app = Flask(__name__, static_folder='static', template_folder='templates')
 CORS(app)
 
-# Path to your SQLite database
 DB_PATH = 'users.db'
 
 def get_db_connection():
@@ -75,34 +74,45 @@ def register():
     conn.close()
 
     return jsonify({'success': True})
+
+
 @app.route('/log-scan', methods=['POST'])
 def log_scan():
     data = request.get_json()
-    print("Received QR data:", data)
     qr_data = data.get('qr_data')
-
 
     if not qr_data:
         return jsonify({'success': False, 'message': 'No QR data provided'}), 400
 
+    # Extract Employee ID from scanned text
+    lines = qr_data.split('\n')
+    employee_id = None
+    for line in lines:
+        if "Employee ID" in line:
+            employee_id = line.split(":")[1].strip()
+            break
+
+    if not employee_id:
+        return jsonify({'success': False, 'message': 'Invalid QR data, employee ID not found'}), 400
+
     try:
         conn = get_db_connection()
         conn.execute(
-            'INSERT INTO scans (employee_id, timestamp) VALUES (?, CURRENT_TIMESTAMP)',
-            (qr_data,)
+            'INSERT INTO scans (employee_id, timestamp, raw_data) VALUES (?, CURRENT_TIMESTAMP, ?)',
+            (employee_id, qr_data)
         )
-        
+        conn.commit()
+
         scans = conn.execute('SELECT * FROM scans').fetchall()
         print("\nCurrent contents of scans table:")
         for row in scans:
             print(dict(row))
-        conn.commit()
+
         conn.close()
         return jsonify({'success': True})
     except Exception as e:
         print("Scan logging error:", e)
         return jsonify({'success': False, 'message': 'Internal server error'}), 500
-
 
 
 @app.route('/get-employee', methods=['POST'])
@@ -114,7 +124,9 @@ def get_employee():
         return jsonify({'success': False, 'message': 'No Employee ID provided'}), 400
 
     conn = get_db_connection()
-    user = conn.execute('SELECT * FROM users WHERE email = ?', (emp_id,)).fetchone()
+    user = conn.execute(
+        'SELECT * FROM users WHERE email = ? OR id = ?', (emp_id, emp_id)
+    ).fetchone()
     conn.close()
 
     if user:
@@ -132,9 +144,6 @@ def get_employee():
     else:
         return jsonify({'success': False, 'message': 'Employee not found'}), 404
 
-@app.route('/camera')
-def camera():
-    return render_template('camera.html')
 
 @app.route('/statistics', methods=['GET', 'POST'])
 def statistics():
@@ -146,13 +155,16 @@ def statistics():
             return jsonify({'success': False, 'message': 'No employee ID provided'}), 400
 
         conn = get_db_connection()
-
         user = conn.execute('SELECT * FROM users WHERE email = ? OR id = ?', (employee_id, employee_id)).fetchone()
+
         if not user:
             conn.close()
             return jsonify({'success': False, 'message': 'Employee not found'}), 404
 
-        scans = conn.execute('SELECT timestamp FROM scans WHERE employee_id = ? ORDER BY timestamp DESC', (employee_id,)).fetchall()
+        scans = conn.execute(
+            'SELECT timestamp FROM scans WHERE employee_id = ? ORDER BY timestamp DESC',
+            (employee_id,)
+        ).fetchall()
         conn.close()
 
         return jsonify({
@@ -160,14 +172,14 @@ def statistics():
             'employee': dict(user),
             'scans': [row['timestamp'] for row in scans]
         })
-    
+
     return render_template('statistics.html')
 
 
-# @app.route('/home')
-# def home():
-#     return render_template('home.html')
+@app.route('/camera')
+def camera():
+    return render_template('camera.html')
 
-
+# Launch app
 if __name__ == '__main__':
     app.run(debug=True)
