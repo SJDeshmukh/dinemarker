@@ -34,11 +34,12 @@ c.execute('DROP TABLE IF EXISTS scans')
 
 # Create correct table with employee_id
 c.execute('''
-    CREATE TABLE scans (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        employee_id TEXT NOT NULL,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
+CREATE TABLE IF NOT EXISTS scans (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  employee_id TEXT NOT NULL,
+  timestamp TEXT NOT NULL
+);
+
 ''')
 
 conn.commit()
