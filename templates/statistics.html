@@ -54,3 +54,52 @@
   </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Employee Statistics</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white p-6">
+  <h1 class="text-3xl font-bold mb-4">Employee Check-In Statistics</h1>
+
+  <input id="empId" placeholder="Enter Employee ID or Email" class="p-2 text-black rounded mb-4" />
+  <button onclick="fetchStats()" class="bg-violet-600 px-4 py-2 rounded">Get Statistics</button>
+
+  <div id="stats" class="mt-6"></div>
+
+  <script>
+    function fetchStats() {
+      const empId = document.getElementById('empId').value;
+      fetch('/statistics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ employee_id: empId })
+      })
+      .then(res => res.json())
+      .then(data => {
+        const statsDiv = document.getElementById('stats');
+        if (!data.success) {
+          statsDiv.innerHTML = `<p class="text-red-500">${data.message}</p>`;
+          return;
+        }
+
+        const emp = data.employee;
+        let html = `<h2 class="text-xl font-semibold mb-2">Employee: ${emp.name} ${emp.surname}</h2>`;
+        html += `<ul class="list-disc ml-6">`;
+        data.scans.forEach(ts => {
+          html += `<li>${ts}</li>`;
+        });
+        html += `</ul>`;
+        statsDiv.innerHTML = html;
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById('stats').innerHTML = `<p class="text-red-500">Error fetching data.</p>`;
+      });
+    }
+  </script>
+</body>
+</html>
