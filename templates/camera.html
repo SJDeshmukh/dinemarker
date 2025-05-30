@@ -15,12 +15,15 @@
   <div id="success" class="hidden mt-6 text-center">
     <div class="text-green-500 text-7xl">✅</div>
     <p class="mt-2 text-green-300 font-bold text-lg">Scan successful!</p>
+    <p id="qr-result" class="mt-1 text-sm text-white"></p> <!-- Display QR data here -->
   </div>
 
   <script>
     const successDiv = document.getElementById('success');
+    const qrResult = document.getElementById('qr-result');
 
-    function showSuccess() {
+    function showSuccess(qrText) {
+      qrResult.textContent = `Scanned QR: ${qrText}`;
       successDiv.classList.remove('hidden');
       setTimeout(() => {
         successDiv.classList.add('hidden');
@@ -29,20 +32,17 @@
     }
 
     function handleScanSuccess(decodedText, decodedResult) {
-      // Pause scanner to prevent duplicate scans
       html5QrcodeScanner.pause();
 
-      // Send data to backend
       fetch('/log-scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ qr_data: decodedText })  // ✅ this must match!
+        body: JSON.stringify({ qr_data: decodedText }) // Must match Flask backend
       })
-
       .then(res => res.json())
       .then(response => {
         if (response.success) {
-          showSuccess();
+          showSuccess(decodedText);
         } else {
           alert('Logging failed');
           html5QrcodeScanner.resume();
@@ -58,10 +58,7 @@
     const html5QrcodeScanner = new Html5Qrcode("reader");
     html5QrcodeScanner.start(
       { facingMode: "environment" },
-      {
-        fps: 10,
-        qrbox: 250
-      },
+      { fps: 10, qrbox: 250 },
       handleScanSuccess
     );
   </script>
