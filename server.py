@@ -79,22 +79,13 @@ def register():
 @app.route('/log-scan', methods=['POST'])
 def log_scan():
     data = request.get_json()
-    print("📥 Incoming scan data:", data)
     qr_data = data.get('qr_data')
 
     if not qr_data:
         return jsonify({'success': False, 'message': 'No QR data provided'}), 400
 
-    # Extract Employee ID
-    lines = qr_data.split('\n')
-    employee_id = None
-    for line in lines:
-        if "Employee ID" in line:
-            employee_id = line.split(":")[1].strip()
-            break
-
-    if not employee_id:
-        return jsonify({'success': False, 'message': 'Invalid QR data, employee ID not found'}), 400
+    # 🔄 Assume raw employee ID
+    employee_id = qr_data.strip()
 
     try:
         conn = get_db_connection()
@@ -108,6 +99,7 @@ def log_scan():
     except Exception as e:
         print("Scan logging error:", e)
         return jsonify({'success': False, 'message': 'Internal server error'}), 500
+
 
 @app.route('/get-employee', methods=['POST'])
 def get_employee():
