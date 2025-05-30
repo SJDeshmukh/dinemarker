@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Employee Lookup</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
+  <h1 class="text-3xl font-bold mb-6">Employee Info Lookup</h1>
+
+  <div class="w-full max-w-md bg-gray-800 p-6 rounded-lg shadow-md">
+    <input id="empId" type="text" placeholder="Enter Employee Email" class="w-full p-2 rounded text-black mb-4"/>
+    <button onclick="lookupEmployee()" class="bg-violet-500 hover:bg-violet-600 text-white px-4 py-2 rounded">Search</button>
+
+    <div id="result" class="mt-6 text-sm text-white"></div>
+  </div>
+
+  <script>
+    function lookupEmployee() {
+      const empId = document.getElementById('empId').value;
+      const resultDiv = document.getElementById('result');
+
+      if (!empId) {
+        resultDiv.innerHTML = '<p class="text-red-400">Please enter an Employee Email.</p>';
+        return;
+      }
+
+      fetch('/get-employee', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ employee_id: empId })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          const user = data.data;
+          resultDiv.innerHTML = `
+            <p><strong>Name:</strong> ${user.name} ${user.surname}</p>
+            <p><strong>Email:</strong> ${user.email}</p>
+            <p><strong>Phone:</strong> ${user.phone}</p>
+            <p><strong>Canteen:</strong> ${user.canteen_name}</p>
+            <p><strong>Location:</strong> ${user.canteen_location}</p>
+          `;
+        } else {
+          resultDiv.innerHTML = `<p class="text-red-400">${data.message}</p>`;
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        resultDiv.innerHTML = '<p class="text-red-400">Error fetching data.</p>';
+      });
+    }
+  </script>
+</body>
+</html>

@@ -97,10 +97,41 @@ def log_scan():
     except Exception as e:
         print("Scan logging error:", e)
         return jsonify({'success': False, 'message': 'Internal server error'}), 500
+@app.route('/get-employee', methods=['POST'])
+def get_employee():
+    data = request.get_json()
+    emp_id = data.get('employee_id')
+
+    if not emp_id:
+        return jsonify({'success': False, 'message': 'No Employee ID provided'}), 400
+
+    conn = get_db_connection()
+    user = conn.execute('SELECT * FROM users WHERE email = ?', (emp_id,)).fetchone()
+    conn.close()
+
+    if user:
+        return jsonify({
+            'success': True,
+            'data': {
+                'name': user['name'],
+                'surname': user['surname'],
+                'email': user['email'],
+                'phone': user['phone'],
+                'canteen_name': user['canteen_name'],
+                'canteen_location': user['canteen_location']
+            }
+        })
+    else:
+        return jsonify({'success': False, 'message': 'Employee not found'}), 404
 
 @app.route('/camera')
 def camera():
     return render_template('camera.html')
+
+@app.route('/statistics')
+def statistics():
+    return render_template('statistics.html')
+
 
 # @app.route('/home')
 # def home():
