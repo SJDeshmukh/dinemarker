@@ -144,35 +144,56 @@ def get_employee():
     else:
         return jsonify({'success': False, 'message': 'Employee not found'}), 404
 
+from flask import request, jsonify, render_template
+from datetime import datetime
+
 @app.route('/statistics', methods=['GET', 'POST'])
 def statistics():
     if request.method == 'POST':
         data = request.get_json()
         employee_id = data.get('employee_id')
+        from_date = data.get('from_date')
+        to_date = data.get('to_date')
 
         if not employee_id:
             return jsonify({'success': False, 'message': 'No employee ID provided'}), 400
 
         conn = get_db_connection()
-        user = conn.execute('SELECT * FROM users WHERE employee_id = ?', (employee_id,)).fetchone()
+        user = conn.execute('SELECT * FROM users WHERE employee_id = ? OR email = ?', (employee_id, employee_id)).fetchone()
 
         if not user:
             conn.close()
             return jsonify({'success': False, 'message': 'Employee not found'}), 404
 
-        scans = conn.execute(
-            'SELECT timestamp FROM scans WHERE employee_id = ? ORDER BY timestamp DESC',
-            (employee_id,)
-        ).fetchall()
+        # 📅 Build base query
+        query = 'SELECT timestamp FROM scans WHERE employee_id = ?'
+        params = [user['employee_id']]
+
+        if from_date:
+            query += ' AND date(timestamp) >= ?'
+            params.append(from_date)
+        if to_date:
+            query += ' AND date(timestamp) <= ?'
+            params.append(to_date)
+
+        query += ' ORDER BY timestamp DESC'
+        scans = conn.execute(query, params).fetchall()
         conn.close()
 
         return jsonify({
             'success': True,
-            'employee': dict(user),
+            'employee': {
+                'name': user['name'],
+                'surname': user['surname'],
+                'employee_id': user['employee_id'],
+                'email': user['email']
+            },
             'scans': [row['timestamp'] for row in scans]
         })
 
+    # Default GET → serve frontend
     return render_template('statistics.html')
+
 
 @app.route('/camera')
 def camera():
