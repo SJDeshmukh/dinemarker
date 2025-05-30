@@ -78,7 +78,8 @@ def register():
 @app.route('/log-scan', methods=['POST'])
 def log_scan():
     data = request.get_json()
-    qr_data = data.get('employees.db')
+    qr_data = data.get('qr_data')
+
 
     if not qr_data:
         return jsonify({'success': False, 'message': 'No QR data provided'}), 400
