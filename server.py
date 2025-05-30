@@ -78,6 +78,7 @@ def register():
 @app.route('/log-scan', methods=['POST'])
 def log_scan():
     data = request.get_json()
+    print("Received QR data:", data)
     qr_data = data.get('qr_data')
 
 

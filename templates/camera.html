@@ -36,8 +36,9 @@
       fetch('/log-scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ qr_data: decodedText })
+        body: JSON.stringify({ qr_data: decodedText })  // ✅ this must match!
       })
+
       .then(res => res.json())
       .then(response => {
         if (response.success) {
