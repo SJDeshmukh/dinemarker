@@ -91,7 +91,7 @@ def log_scan():
 
         # 🔍 Check if employee exists
         employee = conn.execute(
-            'SELECT * FROM employees WHERE employee_id = ?',
+            'SELECT * FROM users WHERE employee_id = ?',
             (employee_id,)
         ).fetchone()
 
