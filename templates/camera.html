@@ -21,28 +21,40 @@
   <script>
     const successDiv = document.getElementById('success');
     const qrResult = document.getElementById('qr-result');
-
-    function showSuccess(qrText) {
-      qrResult.textContent = `Scanned QR: ${qrText}`;
+  
+    function extractEmployeeId(text) {
+      const match = text.match(/Employee ID:\s*(\w+)/);
+      return match ? match[1] : null;
+    }
+  
+    function showSuccess(empId) {
+      qrResult.textContent = `Scanned Employee ID: ${empId}`;
       successDiv.classList.remove('hidden');
       setTimeout(() => {
         successDiv.classList.add('hidden');
         html5QrcodeScanner.resume();
       }, 2500);
     }
-
+  
     function handleScanSuccess(decodedText, decodedResult) {
       html5QrcodeScanner.pause();
-
+  
+      const empId = extractEmployeeId(decodedText);
+      if (!empId) {
+        alert("Invalid QR code format. Employee ID not found.");
+        html5QrcodeScanner.resume();
+        return;
+      }
+  
       fetch('/log-scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ qr_data: decodedText }) // Must match Flask backend
+        body: JSON.stringify({ qr_data: empId }) // Send only Employee ID
       })
       .then(res => res.json())
       .then(response => {
         if (response.success) {
-          showSuccess(decodedText);
+          showSuccess(empId);
         } else {
           alert('Logging failed');
           html5QrcodeScanner.resume();
@@ -54,7 +66,7 @@
         html5QrcodeScanner.resume();
       });
     }
-
+  
     const html5QrcodeScanner = new Html5Qrcode("reader");
     html5QrcodeScanner.start(
       { facingMode: "environment" },
@@ -62,5 +74,6 @@
       handleScanSuccess
     );
   </script>
+  
 </body>
 </html>
