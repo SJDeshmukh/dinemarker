@@ -12,21 +12,33 @@
 
   <div id="reader" class="w-full max-w-sm border-4 border-violet-500 rounded-xl"></div>
 
-  <div id="success" class="hidden mt-6 text-center">
+  <!-- Success Message -->
+  <div id="success" class="hidden mt-6 text-center transition-all duration-300">
     <div class="text-green-500 text-7xl">✅</div>
     <p class="mt-2 text-green-300 font-bold text-lg">Scan successful!</p>
-    <p id="qr-result" class="mt-1 text-sm text-white"></p> <!-- Display QR data here -->
+    <p id="qr-result" class="mt-1 text-sm text-white"></p>
+  </div>
+
+  <!-- Error Message -->
+  <div id="error" class="hidden mt-6 text-center transition-all duration-300">
+    <div class="text-red-500 text-7xl">❌</div>
+    <p class="mt-2 text-red-300 font-bold text-lg">Scan failed!</p>
+    <p id="error-message" class="mt-1 text-sm text-white"></p>
   </div>
 
   <script>
     const successDiv = document.getElementById('success');
+    const errorDiv = document.getElementById('error');
     const qrResult = document.getElementById('qr-result');
-  
+    const errorMessage = document.getElementById('error-message');
+
     function extractEmployeeId(text) {
-      const match = text.match(/Employee ID:\s*(\w+)/);
-      return match ? match[1] : null;
+      // Try full QR text match first (like: Employee ID: EMP001)
+      const match = text.match(/Employee ID:\s*(\w+)/i);
+      // Fallback: if it's just the ID like "EMP001"
+      return match ? match[1] : (text.match(/^EMP\d+$/i) ? text : null);
     }
-  
+
     function showSuccess(empId) {
       qrResult.textContent = `Scanned Employee ID: ${empId}`;
       successDiv.classList.remove('hidden');
@@ -35,38 +47,44 @@
         html5QrcodeScanner.resume();
       }, 2500);
     }
-  
+
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorDiv.classList.remove('hidden');
+      setTimeout(() => {
+        errorDiv.classList.add('hidden');
+        html5QrcodeScanner.resume();
+      }, 3000);
+    }
+
     function handleScanSuccess(decodedText, decodedResult) {
       html5QrcodeScanner.pause();
-  
+
       const empId = extractEmployeeId(decodedText);
       if (!empId) {
-        alert("Invalid QR code format. Employee ID not found.");
-        html5QrcodeScanner.resume();
+        showError("Invalid QR code format. Employee ID not found.");
         return;
       }
-  
+
       fetch('/log-scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ qr_data: empId }) // Send only Employee ID
+        body: JSON.stringify({ qr_data: empId })  // Send only Employee ID
       })
       .then(res => res.json())
       .then(response => {
         if (response.success) {
           showSuccess(empId);
         } else {
-          alert('Logging failed');
-          html5QrcodeScanner.resume();
+          showError(response.message || 'Logging failed');
         }
       })
       .catch(error => {
-        alert('Scan error');
         console.error(error);
-        html5QrcodeScanner.resume();
+        showError('Scan error. Please try again.');
       });
     }
-  
+
     const html5QrcodeScanner = new Html5Qrcode("reader");
     html5QrcodeScanner.start(
       { facingMode: "environment" },
@@ -74,6 +92,5 @@
       handleScanSuccess
     );
   </script>
-  
 </body>
 </html>
