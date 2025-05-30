@@ -84,21 +84,35 @@ def log_scan():
     if not qr_data:
         return jsonify({'success': False, 'message': 'No QR data provided'}), 400
 
-    # 🔄 Assume raw employee ID
     employee_id = qr_data.strip()
 
     try:
         conn = get_db_connection()
+
+        # 🔍 Check if employee exists
+        employee = conn.execute(
+            'SELECT * FROM employees WHERE employee_id = ?',
+            (employee_id,)
+        ).fetchone()
+
+        if not employee:
+            conn.close()
+            return jsonify({'success': False, 'message': 'Employee not registered'}), 404
+
+        # ✅ Employee exists, log the scan
         conn.execute(
             'INSERT INTO scans (employee_id, timestamp, raw_data) VALUES (?, CURRENT_TIMESTAMP, ?)',
             (employee_id, qr_data)
         )
         conn.commit()
         conn.close()
+
         return jsonify({'success': True})
+    
     except Exception as e:
         print("Scan logging error:", e)
         return jsonify({'success': False, 'message': 'Internal server error'}), 500
+
 
 
 @app.route('/get-employee', methods=['POST'])
