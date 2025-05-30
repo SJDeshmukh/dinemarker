@@ -28,32 +28,12 @@ import sqlite3
 
 conn = sqlite3.connect('users.db')
 conn.execute('''
-CREATE TABLE IF NOT EXISTS scans (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    employee_id TEXT NOT NULL,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
-
-
+    CREATE TABLE IF NOT EXISTS scans (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        qr_data TEXT NOT NULL,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
 ''')
 conn.commit()
 conn.close()
 
-# CREATE TABLE IF NOT EXISTS scans (
-#     id INTEGER PRIMARY KEY AUTOINCREMENT,
-#     employee_id TEXT NOT NULL,
-#     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-#     FOREIGN KEY (employee_id) REFERENCES users(email)  -- or `employee_id` if you have it
-# );
-
-# CREATE TABLE IF NOT EXISTS users (
-#     id INTEGER PRIMARY KEY AUTOINCREMENT,
-#     name TEXT NOT NULL,
-#     surname TEXT NOT NULL,
-#     email TEXT UNIQUE NOT NULL,
-#     phone TEXT,
-#     canteen_name TEXT,
-#     canteen_location TEXT,
-#     password TEXT NOT NULL  -- if using login
-# );
